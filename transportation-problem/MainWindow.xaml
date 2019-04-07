@@ -8,26 +8,26 @@
         Title="Transportation Problem" Height="450" Width="800" Background="Gainsboro">
     <Grid>
         <Label Content="Sizes of unit transportation costs table:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="215"/>
-        <TextBox Name="columns" HorizontalAlignment="Left" Height="23" Margin="230,15,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="25" TextChanged="TextBox_TextChanged"/>
-        <TextBox Name="rows" HorizontalAlignment="Left" Height="23" Margin="271,15,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="25"/>
-        <Label Content="x" HorizontalAlignment="Left" Margin="255,12,0,0" VerticalAlignment="Top"/>
-
-        <DataGrid AutoGenerateColumns="True" 
-          Height="auto" 
-          HorizontalAlignment="Left" 
-          Name="dataGrid1" 
-          VerticalAlignment="Top" 
-          Width="auto" Margin="44,75,0,0" MinColumnWidth="30" RowHeight="20" RenderTransformOrigin="0.5,0.5">
-            <DataGrid.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform/>
-                    <SkewTransform/>
-                    <RotateTransform Angle="-2.651"/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </DataGrid.RenderTransform>
+        <TextBox Name="columns" HorizontalAlignment="Left" Height="23" Margin="230,12,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="25" TextChanged="TextBox_TextChanged"/>
+        <TextBox Name="rows" HorizontalAlignment="Left" Height="23" Margin="271,12,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="25"/>
+        <Label Content="x" HorizontalAlignment="Left" Margin="255,8,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="createTable" Content="Create!" HorizontalAlignment="Left" Margin="315,12,0,0" VerticalAlignment="Top" Width="75" Click="createTable_Button_Click"/>
+        <DataGrid x:Name="myDataGrid" LoadingRow="dg_LoadingRow" HorizontalAlignment="Left" Height="auto" Margin="118,106,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692">
+            <DataGrid.RowHeaderTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type DataGridRow}}, Path=Header}"></TextBlock>
+                </DataTemplate>
+            </DataGrid.RowHeaderTemplate>
         </DataGrid>
-        <Button Content="Create!" HorizontalAlignment="Left" Margin="310,16,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <Label Content="SUPPLY" HorizontalAlignment="Left" Margin="176,43,0,0" VerticalAlignment="Top"/>
+        <DataGrid x:Name="myDataGridPodaz" HeadersVisibility="None" HorizontalAlignment="Left" Height="auto" Margin="141,78,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692"/>
+        <Label Content="DEMAND" HorizontalAlignment="Left" Margin="10,180,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.652,1.962"/>
+        <DataGrid x:Name="myDataGridPopyt" HeadersVisibility="None" HorizontalAlignment="Left" Height="auto" Margin="85,144,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692"/>
+        <Label Content="ALL SUPPLY:" HorizontalAlignment="Left" Margin="430,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.667,0.731"/>
+        <Label Content="ALL DEMAND:" HorizontalAlignment="Left" Margin="555,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.652,1.962"/>
+        <Label x:Name="allSupply" Content="0" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.395,0.192"/>
+        <Label x:Name="allDemand" Content="0" HorizontalAlignment="Left" Margin="640,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.395,0.192"/>
+        <Button x:Name="countSupplyAndDemand" Content="Count!" HorizontalAlignment="Left" Margin="690,12,0,0" VerticalAlignment="Top" Width="75" Click="countSupplyAndDemand_Button_Click"/>
 
     </Grid>
 </Window>
