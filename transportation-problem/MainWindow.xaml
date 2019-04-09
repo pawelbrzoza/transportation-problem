@@ -8,10 +8,10 @@
         Title="Transportation Problem" Height="450" Width="800" Background="Gainsboro">
     <Grid>
         <Label Content="Sizes of unit transportation costs table:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="215"/>
-        <TextBox Name="columns" HorizontalAlignment="Left" Height="23" Margin="230,12,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="25" TextChanged="TextBox_TextChanged"/>
-        <TextBox Name="rows" HorizontalAlignment="Left" Height="23" Margin="271,12,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" Width="25"/>
+        <TextBox Name="columnsTextBox" HorizontalAlignment="Left" Height="23" Margin="230,12,0,0" TextWrapping="Wrap" Text="3" VerticalAlignment="Top" Width="25"/>
+        <TextBox Name="rowsTextBox" HorizontalAlignment="Left" Height="23" Margin="271,12,0,0" TextWrapping="Wrap" Text="3" VerticalAlignment="Top" Width="25"/>
         <Label Content="x" HorizontalAlignment="Left" Margin="255,8,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="createTable" Content="Create!" HorizontalAlignment="Left" Margin="315,12,0,0" VerticalAlignment="Top" Width="75" Click="createTable_Button_Click"/>
+        <Button x:Name="createTableButton" Content="Create!" HorizontalAlignment="Left" Margin="315,12,0,0" VerticalAlignment="Top" Width="75" Click="createTable_Button_Click"/>
         <DataGrid x:Name="myDataGrid" LoadingRow="dg_LoadingRow" HorizontalAlignment="Left" Height="auto" Margin="118,106,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692">
             <DataGrid.RowHeaderTemplate>
                 <DataTemplate>
@@ -20,14 +20,20 @@
             </DataGrid.RowHeaderTemplate>
         </DataGrid>
         <Label Content="SUPPLY" HorizontalAlignment="Left" Margin="176,43,0,0" VerticalAlignment="Top"/>
-        <DataGrid x:Name="myDataGridPodaz" HeadersVisibility="None" HorizontalAlignment="Left" Height="auto" Margin="141,78,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692"/>
+        <DataGrid x:Name="myDataGridSupply" HeadersVisibility="None" HorizontalAlignment="Left" Height="auto" Margin="141,78,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692"/>
         <Label Content="DEMAND" HorizontalAlignment="Left" Margin="10,180,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.652,1.962"/>
-        <DataGrid x:Name="myDataGridPopyt" HeadersVisibility="None" HorizontalAlignment="Left" Height="auto" Margin="85,144,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692"/>
+        <DataGrid x:Name="myDataGridDemand" HeadersVisibility="None" HorizontalAlignment="Left" Height="auto" Margin="85,144,0,0" VerticalAlignment="Top" Width="auto" CanUserAddRows="false" RenderTransformOrigin="4.083,2.692"/>
         <Label Content="ALL SUPPLY:" HorizontalAlignment="Left" Margin="430,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.667,0.731"/>
         <Label Content="ALL DEMAND:" HorizontalAlignment="Left" Margin="555,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.652,1.962"/>
-        <Label x:Name="allSupply" Content="0" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.395,0.192"/>
-        <Label x:Name="allDemand" Content="0" HorizontalAlignment="Left" Margin="640,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.395,0.192"/>
-        <Button x:Name="countSupplyAndDemand" Content="Count!" HorizontalAlignment="Left" Margin="690,12,0,0" VerticalAlignment="Top" Width="75" Click="countSupplyAndDemand_Button_Click"/>
+        <Label x:Name="allSupplyLabel" Content="0" HorizontalAlignment="Left" Margin="505,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.395,0.192"/>
+        <Label x:Name="allDemandLabel" Content="0" HorizontalAlignment="Left" Margin="640,10,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.395,0.192"/>
+        <Button x:Name="countSupplyAndDemandButton" Content="Count!" HorizontalAlignment="Left" Margin="690,12,0,0" VerticalAlignment="Top" Width="75" Click="countSupplyAndDemand_Button_Click"/>
+        <Label Content="TASK IS BALANCED? :" HorizontalAlignment="Left" Margin="430,43,0,0" VerticalAlignment="Top" Width="125"/>
+        <Label x:Name="isBalancedLabel" Content="..." HorizontalAlignment="Left" Margin="590,43,0,0" VerticalAlignment="Top" RenderTransformOrigin="2.261,0.461"/>
+        <Label Content="COST:" HorizontalAlignment="Left" Margin="430,101,0,0" VerticalAlignment="Top" Width="120"/>
+        <Label x:Name="costLabel" Content="..." HorizontalAlignment="Left" Margin="590,101,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.557,1.805"/>
+        <Label Content="Condition N = n + m - 1? :" HorizontalAlignment="Left" Margin="430,70,0,0" VerticalAlignment="Top" Width="155"/>
+        <Label x:Name="conditionLabel" Content="..." HorizontalAlignment="Left" Margin="590,70,0,0" VerticalAlignment="Top" RenderTransformOrigin="2.261,0.461"/>
 
     </Grid>
 </Window>

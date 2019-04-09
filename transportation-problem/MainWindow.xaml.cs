@@ -24,14 +24,17 @@ namespace transportation_problem
     public partial class MainWindow : System.Windows.Window
     {
         private MainProperties properties;
+        private int[,] transportCosts = new int[10, 10];
+        private int[] supply = new int[10];
+        private int[] demand = new int[10];
+        private int[,] firstSolution = new int[10, 10];
+        private int[,] firstSolutionWithCost = new int[10, 10];
 
         public MainWindow()
         {
             InitializeComponent();
             properties = new MainProperties();
         }
-    
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e) {}
 
         private void CreateTable()
         {
@@ -60,10 +63,10 @@ namespace transportation_problem
             DataColumn[] podazCol = new DataColumn[(int)properties.Dimensions.X];
             for (int i = 0; i < (int)properties.Dimensions.X; i++)
             {
-                podazCol[i] = new DataColumn("D" + (i+1), typeof(string));
+                podazCol[i] = new DataColumn("D" + (i + 1), typeof(string));
                 dtPodaz.Columns.Add(podazCol[i]);
             }
-                
+
             DataRow podazRow = dtPodaz.NewRow();
             for (int j = 0; j < (int)properties.Dimensions.X; j++)
                 podazRow[j] = "0";
@@ -81,15 +84,15 @@ namespace transportation_problem
                 dtPopyt.Rows.Add(popytRow[i]);
             }
 
-            myDataGridPodaz.ItemsSource = dtPodaz.DefaultView;
-            myDataGridPopyt.ItemsSource = dtPopyt.DefaultView;
+            myDataGridSupply.ItemsSource = dtPodaz.DefaultView;
+            myDataGridDemand.ItemsSource = dtPopyt.DefaultView;
             myDataGrid.ItemsSource = dt.DefaultView;
         }
 
         private void createTable_Button_Click(object sender, RoutedEventArgs e)
         {
-            properties.Dimensions.X = Convert.ToDouble(columns.Text);
-            properties.Dimensions.Y = Convert.ToDouble(rows.Text);
+            properties.Dimensions.X = Convert.ToDouble(columnsTextBox.Text);
+            properties.Dimensions.Y = Convert.ToDouble(rowsTextBox.Text);
             CreateTable();
         }
 
@@ -100,23 +103,133 @@ namespace transportation_problem
 
         private void countSupplyAndDemand_Button_Click(object sender, RoutedEventArgs e)
         {
-            int sum = 0;
+            parseToArrays();
 
-            foreach (DataRowView row in myDataGridPopyt.Items)
-            {
-                sum += Convert.ToInt32(row.Row.ItemArray[0].ToString());
-            }
-            allDemand.Content = Convert.ToString(sum);
+            int sum = 0;
+            foreach (int x in demand)
+                sum += x;
+            allDemandLabel.Content = Convert.ToString(sum);
 
             sum = 0;
+            foreach (int x in supply)
+                sum += x;
 
-            DataRowView row2 = (DataRowView)myDataGridPodaz.Items.GetItemAt(0);
+            allSupplyLabel.Content = Convert.ToString(sum);
+            IsBalanced();
+            countFirstSolution();
+            if (IsPremitted())
+            {
+                countArrayCosts();
+            }
+        }
+
+        private void IsBalanced()
+        {
+            if (allSupplyLabel.Content.Equals(allDemandLabel.Content))
+                isBalancedLabel.Content = "YES";
+            else
+                isBalancedLabel.Content = "NO";
+        }
+
+        private void parseToArrays()
+        {
+            // supply
+            DataRowView row = (DataRowView)myDataGridSupply.Items.GetItemAt(0);
             for (int i = 0; i < (int)properties.Dimensions.X; i++)
             {
-                sum += Convert.ToInt32(row2.Row.ItemArray[i].ToString());
+                supply[i] = Convert.ToInt32(row.Row.ItemArray[i].ToString());
             }
 
-            allSupply.Content = Convert.ToString(sum);
+            // demand
+            int p = 0;
+            foreach (DataRowView column in myDataGridDemand.Items)
+            {
+                demand[p++] += Convert.ToInt32(column.Row.ItemArray[0].ToString());
+            }
+
+            //transportCosts
+            for (int i = 0; i < (int)properties.Dimensions.Y; i++)
+            {
+                DataRowView tempRow = (DataRowView)myDataGrid.Items.GetItemAt(i);
+                for (int j = 0; j < (int)properties.Dimensions.X; j++)
+                {
+                    transportCosts[j, i] = Convert.ToInt32(tempRow.Row.ItemArray[j].ToString());
+                }
+            }
+        }
+
+        private void countFirstSolution()
+        {
+            int[] tempSupply = new int[10];
+            int[] tempDemand = new int[10];
+            tempSupply = supply;
+            tempDemand = demand;
+
+            int i = 0, j = 0, guardI = 0, guardJ = 0;
+
+            while( guardI < (int)properties.Dimensions.X && guardJ < (int)properties.Dimensions.Y )
+            {
+                if(tempSupply[i] > tempDemand[j])
+                {
+                    firstSolution[i, j] = tempDemand[j];
+                    tempSupply[i] -= tempDemand[j];
+                    tempDemand[j] = 0;
+                    i++;
+                }
+                else
+                {
+                    firstSolution[i, j] = tempSupply[i];
+                    tempDemand[j] -= tempSupply[i];
+                    tempSupply[i] = 0;
+                    j++;
+                }
+
+                if(j == (int)properties.Dimensions.Y)
+                {
+                    j = guardJ;
+                    guardI++;
+                    i++;
+                }
+
+                if (i == (int)properties.Dimensions.X)
+                {
+                    i = guardI;
+                    guardJ++;
+                    j++;
+                }
+            }
+        }
+
+        private void countArrayCosts()
+        {
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    firstSolutionWithCost[i, j] = firstSolution[i, j] * transportCosts[i, j];
+
+            int sum = 0;
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    sum += firstSolutionWithCost[i, j];
+            costLabel.Content = Convert.ToString(sum);
+        }
+
+        private bool IsPremitted()
+        {
+            int N = 0;
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    if (firstSolution[i, j] != 0)
+                        N++;
+            if (N == ((int)properties.Dimensions.X + (int)properties.Dimensions.Y - 1))
+            {
+                conditionLabel.Content = "YES";
+                return true;
+            }
+            else
+            {
+                conditionLabel.Content = "NO";
+                return false;
+            }
         }
     }
 }
