@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using transportation_problem.Common;
 using System.Data;
+using System.Collections;
 
 namespace transportation_problem
 {
@@ -24,16 +25,28 @@ namespace transportation_problem
     public partial class MainWindow : System.Windows.Window
     {
         private MainProperties properties;
-        private int[,] transportCosts = new int[10, 10];
+        public struct Node
+        {
+            public int val;
+            public Point dim;
+        };
+        Node[] arrCycle = new Node[4];
+
+        private int?[,] transportCosts = new int?[10, 10];
         private int[] supply = new int[10];
         private int[] demand = new int[10];
-        private int[,] firstSolution = new int[10, 10];
-        private int[,] firstSolutionWithCost = new int[10, 10];
+        private int?[,] firstSolution = new int?[10, 10];
+        private int?[,] optimizedSolution = new int?[10, 10];
+        private int?[,] potentials = new int?[10, 10];
+        private int?[,] firstSolutionWithCost = new int?[10, 10];
+        private int?[] Ui = new int?[10]; //alfa
+        private int?[] Vj = new int?[10]; //beta
 
         public MainWindow()
         {
             InitializeComponent();
             properties = new MainProperties();
+
         }
 
         private void CreateTable()
@@ -121,6 +134,7 @@ namespace transportation_problem
             {
                 countArrayCosts();
             }
+            printFistSolution();
         }
 
         private void IsBalanced()
@@ -200,6 +214,72 @@ namespace transportation_problem
             }
         }
 
+        private void printFistSolution()
+        {
+            Console.Out.WriteLine();
+            Console.Out.WriteLine("First solution");
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+            {
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                {
+                    Console.Out.Write(firstSolution[i, j].Value + " ");
+                }
+                Console.Out.WriteLine();
+            }
+            Console.Out.WriteLine();
+            
+            Console.Out.WriteLine("First solution with costs");
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+            {
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                {
+                    Console.Out.Write(firstSolutionWithCost[i, j].Value + " ");
+                }
+                Console.Out.WriteLine();
+            }
+            Console.Out.WriteLine();
+        }
+
+        private void printOthers()
+        {
+            Console.Out.WriteLine("Alfa: ");
+            for (int i = 0; i < (int)properties.Dimensions.Y; i++)
+            {
+                Console.Out.Write(Ui[i] + " ");
+            }
+            Console.Out.WriteLine();
+
+            Console.Out.WriteLine("Beta: ");
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+            {
+                Console.Out.Write(Vj[i] + " ");
+            }
+            Console.Out.WriteLine();
+
+            Console.Out.WriteLine("Optimized Solution");
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+            {
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                {
+                    Console.Out.Write(optimizedSolution[i, j].Value + " ");
+                }
+                Console.Out.WriteLine();
+            }
+            Console.Out.WriteLine();
+
+            Console.Out.WriteLine("Potentials");
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+            {
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                {
+                    Console.Out.Write(potentials[i, j].Value + " ");
+                }
+                Console.Out.WriteLine();
+            }
+            Console.Out.WriteLine();
+
+        }
+
         private void countArrayCosts()
         {
             for (int i = 0; i < (int)properties.Dimensions.X; i++)
@@ -209,8 +289,21 @@ namespace transportation_problem
             int sum = 0;
             for (int i = 0; i < (int)properties.Dimensions.X; i++)
                 for (int j = 0; j < (int)properties.Dimensions.Y; j++)
-                    sum += firstSolutionWithCost[i, j];
-            costLabel.Content = Convert.ToString(sum);
+                    sum += (int)firstSolutionWithCost[i, j];
+            firstCostLabel.Content = Convert.ToString(sum);
+        }
+
+        private void countArrayCostsAfterOpt()
+        {
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    firstSolutionWithCost[i, j] = firstSolution[i, j] * transportCosts[i, j];
+
+            int sum = 0;
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    sum += (int)firstSolutionWithCost[i, j];
+            optimizedCostLabel.Content = Convert.ToString(sum);
         }
 
         private bool IsPremitted()
@@ -230,6 +323,206 @@ namespace transportation_problem
                 conditionLabel.Content = "NO";
                 return false;
             }
+        }
+
+        private void optimizeSolution_Button_Click(object sender, RoutedEventArgs e)
+        {
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                {
+                    optimizedSolution[i, j] = 0;
+                    potentials[i, j] = 0;
+                }
+
+            countSupplyAndDemand_Button_Click(sender, e);
+            countPotentials();
+            Point? tempPoint = checkPotentials();
+            if (tempPoint != null)
+            {
+                createCycle();
+                transformCycle();
+                changeSolution();
+                countArrayCostsAfterOpt();
+                printOthers();
+            }
+        }
+
+        private void countPotentials()
+        {
+            //counting Ui and Vj
+            for (int i = 0; i < Ui.Length; i++)
+                Ui[i] = null;
+            for (int i = 0; i < Vj.Length; i++)
+                Vj[i] = null;
+
+            Ui[0] = 0;
+            int counterUi = 0, counterVj = 0;
+            while (counterUi < (int)properties.Dimensions.Y && counterVj < (int)properties.Dimensions.X)
+            {
+                for (int i = 0; i < (int)properties.Dimensions.Y; i++)
+                {
+                    for (int j = 0; j < (int)properties.Dimensions.X; j++)
+                    {
+                        if (firstSolution[j, i] != 0 && Ui[i] != null)
+                            Vj[j] = transportCosts[j, i] - Ui[i];
+                    }
+                }
+
+                for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                {
+                    for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    {
+                        if (firstSolution[i, j] != 0 && Vj[i] != null)
+                            Ui[j] = transportCosts[i, j] - Vj[i]; //
+                    }
+                }
+
+                counterUi = 0;
+                counterVj = 0;
+                for (int i = 0; i < Ui.Length; i++)
+                    if(Ui[i] != null)
+                        counterUi++;
+                for (int i = 0; i < Vj.Length; i++)
+                    if (Vj[i] != null)
+                        counterVj++;
+            }
+
+            //counting potentials
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    if (firstSolution[i, j] == 0)
+                        potentials[i, j] = transportCosts[i,j] - (Ui[j] + Vj[i]);
+        }
+
+        private Point? checkPotentials()
+        {
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                    if (potentials[i, j] < 0)
+                    {
+                        return new Point{ X = i, Y = j };
+                    }
+
+            return null;
+        }
+
+        private void createCycle()
+        {
+            arrCycle[0].val = 0;
+            arrCycle[0].dim = (Point)checkPotentials();
+            
+            for (int i = 0; i < (int)properties.Dimensions.X; i++)
+            {
+                for (int j = 0; j < (int)properties.Dimensions.Y; j++)
+                {
+                    if ((arrCycle[0].dim.X == i && arrCycle[0].dim.Y == j) || firstSolution[i, j] == 0)
+                        continue;
+
+                    if (arrCycle[0].dim.Y == j || arrCycle[0].dim.X == i) // for Y ?
+                    {
+                        //1
+                        arrCycle[1].val = firstSolution[i, j].Value;
+                        arrCycle[1].dim.X = i;
+                        arrCycle[1].dim.Y = j;
+
+                        if (arrCycle[0].dim.X == (int)properties.Dimensions.X - 1)
+                        {
+                            //2
+                            arrCycle[2].dim.X = arrCycle[1].dim.X - 1;
+                            arrCycle[2].dim.Y = arrCycle[1].dim.Y;
+                            arrCycle[2].val = firstSolution[(int)arrCycle[2].dim.X, (int)arrCycle[2].dim.Y].Value;
+
+                            //3
+                            arrCycle[3].dim.X = arrCycle[1].dim.X;
+                            arrCycle[3].dim.Y = arrCycle[0].dim.Y;
+                            arrCycle[3].val = firstSolution[(int)arrCycle[3].dim.X, (int)arrCycle[3].dim.Y].Value;
+                        }
+                        else
+                        {
+                            //2
+                            arrCycle[2].dim.X = arrCycle[1].dim.X + 1;
+                            arrCycle[2].dim.Y = arrCycle[1].dim.Y;
+                            arrCycle[2].val = firstSolution[(int)arrCycle[2].dim.X, (int)arrCycle[2].dim.Y].Value;
+
+                            //3
+                            arrCycle[3].dim.X = arrCycle[2].dim.X;
+                            arrCycle[3].dim.Y = arrCycle[0].dim.Y;
+                            arrCycle[3].val = firstSolution[(int)arrCycle[3].dim.X, (int)arrCycle[3].dim.Y].Value;
+                        }
+
+                        if (arrCycle[2].val != 0 && arrCycle[3].val != 0)
+                            break;
+
+                    }
+                    else
+                    {
+                        //2
+                        arrCycle[2].val = firstSolution[i, j].Value;
+                        arrCycle[2].dim.X = i;
+                        arrCycle[2].dim.Y = j;
+
+                        //1
+                        arrCycle[1].dim.X = arrCycle[2].dim.X;
+                        arrCycle[1].dim.Y = arrCycle[0].dim.Y;
+                        arrCycle[1].val = firstSolution[(int)arrCycle[1].dim.X, (int)arrCycle[1].dim.Y].Value;
+
+                        //3
+                        arrCycle[3].dim.X = arrCycle[0].dim.X;
+                        arrCycle[3].dim.Y = arrCycle[2].dim.Y;
+                        arrCycle[3].val = firstSolution[(int)arrCycle[3].dim.X, (int)arrCycle[3].dim.Y].Value;
+
+                        if (arrCycle[1].val != 0 && arrCycle[3].val != 0)
+                            break;
+                    }
+
+                }
+                if (arrCycle[1].val != 0 && arrCycle[2].val != 0 && arrCycle[3].val != 0)
+                    break;
+            }
+        }
+
+        private void transformCycle()
+        {
+            //min val
+            int min = arrCycle[3].val;
+            int minId = 3;
+            if (arrCycle[1].val < min)
+            {
+                min = arrCycle[1].val;
+                minId = 1;
+            }
+            if (arrCycle[2].val < min)
+            {
+                min = arrCycle[2].val;
+                minId = 2;
+            }
+            //asign
+            if (minId == 3)
+            {
+                arrCycle[3].val -= min;
+                arrCycle[2].val += min;
+                arrCycle[1].val -= min;
+                arrCycle[0].val += min;
+            }
+            else if (minId == 2)
+            {
+                arrCycle[3].val += min;
+                arrCycle[2].val -= min;
+                arrCycle[1].val += min;
+            }
+            else
+            {
+                arrCycle[3].val -= min;
+                arrCycle[2].val += min;
+                arrCycle[1].val -= min;
+                arrCycle[0].val += min;
+            }
+        }
+
+        private void changeSolution()
+        {
+            for (int i = 0; i < 4; i++)
+                firstSolution[(int)arrCycle[i].dim.X, (int)arrCycle[i].dim.Y] = arrCycle[i].val;
         }
     }
 }
